@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<link
+			rel="stylesheet"
+			href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+		/>
+	</head>
+	<body>
+		<div class="row pt-5">
+			<div class="col-10 mx-auto">
+				<div id="editcommentform">
+					<form class="form-group" id="commentform"></form>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script src="javascript/script.js"></script>
+	<script>
+		//Function for getting comment content
+		const id = getUrlVars()["id"];
+		function fetchComment() {
+			const getComment = async () => {
+				const url = `http://localhost:3000/comments/findbyid/${id}`;
+				const response = await fetch(url);
+				const data = await response.json();
+				// console.log(data);
+				return data;
+			};
+
+			getComment().then((data) => {
+				console.log(data);
+				const ecf = document.getElementById("commentform");
+				let ecfHTML = "";
+				// for (i in data) {
+				// console.log(data[i]);
+				ecfHTML += `
+					<label for="commentinput">Edit comment</label>
+					<textarea
+						class="form-control usercomments"
+						id="commentinput"
+						name="comment"
+		                      rows="3"
+					>${data.comment}</textarea>
+					<button class="btn btn-outline-primary mt-2">Edit Comment</button>`;
+				// }
+				ecf.innerHTML = ecfHTML;
+				// editListner();
+			});
+			commentUpdate();
+		}
+		fetchComment();
+
+		//Function for updating comment
+		function commentUpdate() {
+			document.querySelector("form").addEventListener("submit", (e) => {
+				e.preventDefault();
+				console.log(e.target.comment.value);
+				const comment = e.target.comment.value;
+				const data = { comment };
+				// console.log(blog);
+				const put = async () => {
+					const rawResponse = await fetch(
+						`http://localhost:3000/comments/update?id=${id}`,
+						{
+							method: "PATCH",
+							headers: {
+								Accept: "application/json",
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify(data),
+						}
+					);
+				};
+				put();
+				e.target.comment.value = "";
+				alert("Comment updated");
+			});
+		}
+	</script>
+</html>

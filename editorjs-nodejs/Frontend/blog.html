@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="style/style.css" />
+		<link
+			rel="stylesheet"
+			href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+		/>
+		<script
+			src="https://code.jquery.com/jquery-3.4.1.min.js"
+			integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+			crossorigin="anonymous"
+		></script>
+		<title>Document</title>
+	</head>
+	<body>
+		<!--Navbar-->
+		<nav class="navbar navbar-expand-lg navbar-dark bg-dark primary-color">
+			<div class="container">
+				<!-- Navbar brand -->
+				<a class="navbar-brand" href="#">SimpleBlog</a>
+
+				<!-- Collapse button -->
+				<button
+					class="navbar-toggler"
+					type="button"
+					data-toggle="collapse"
+					data-target="#basicExampleNav"
+					aria-controls="basicExampleNav"
+					aria-expanded="false"
+					aria-label="Toggle navigation"
+				>
+					<span class="navbar-toggler-icon"></span>
+				</button>
+
+				<!-- Collapsible content -->
+				<div class="collapse navbar-collapse" id="basicExampleNav">
+					<!-- Links -->
+					<ul class="navbar-nav ml-auto">
+						<li class="nav-item active mr-3">
+							<a class="nav-link" href="index.html">Home</a>
+						</li>
+						<li class="nav-item mr-3">
+							<a class="nav-link" href="admin/index.html">Admin</a>
+						</li>
+					</ul>
+					<!-- Links -->
+				</div>
+				<!-- Collapsible content -->
+			</div>
+		</nav>
+		<!--/.Navbar-->
+
+		<!-- Thumbnail -->
+		<div class="thumbnail" id="thumbnail"></div>
+		<!-- Thumbnail -->
+		<div class="container">
+			<!-- Blog Section -->
+			<div class="row">
+				<div class="">
+					<article class="mt-5"></article>
+				</div>
+			</div>
+			<!-- Blog Section -->
+			<hr />
+			<!-- Comment section -->
+			<div class="col-md-10 col-sm-12 mx-auto">
+				<form class="form-group" id="commentform">
+					<label for="commentinput">Write your comment</label>
+					<textarea
+						class="form-control usercomments"
+						id="commentinput"
+						name="comment"
+						rows="3"
+					></textarea>
+					<button class="btn btn-outline-primary mt-2">Add Comment</button>
+				</form>
+			</div>
+			<!-- Comment section -->
+			<hr />
+			<!-- Comment display section -->
+			<h4>Comments</h4>
+			<div class="col-md-10 col-sm-12 mx-auto" id="commentblock"></div>
+			<!-- Comment display section -->
+		</div>
+		<script src="javascript/script.js"></script>
+		<script>
+			const id = getUrlVars()["id"];
+			const getBlog = async () => {
+				const url = `http://localhost:3000/blogs/find/${id}`;
+				const response = await fetch(url);
+				const data = await response.json();
+				return data;
+			};
+			getBlog().then((data) => {
+				let article = document.querySelector("article");
+				const { title, blog, thumbnail } = data;
+				//Thumbnail generation
+				document.getElementById("thumbnail").innerHTML = `
+						             <div
+							class="bg"
+							style="background-image: url(${thumbnail})"
+						></div>
+						<h1 class="bottom-left">
+							${title}.
+						</h1>`;
+				//Note: Blog data is stored in form of JSON in DB
+				//Following switch statement is used to generate HTML from JSON response
+				for (i in blog.blocks) {
+					switch (blog.blocks[i].type) {
+						case "header":
+							header(blog.blocks[i].data);
+							break;
+						case "paragraph":
+							paragraph(blog.blocks[i].data);
+							break;
+						case "image":
+							image(blog.blocks[i].data);
+							break;
+						case "list":
+							list(blog.blocks[i].data);
+							break;
+						case "embed":
+							embed(blog.blocks[i].data);
+							break;
+						default:
+							console.log("default");
+							break;
+					}
+				}
+				//Generate H tags
+				function header(data) {
+					article.innerHTML += `<h${data.level}>${data.text}</h${data.level}>`;
+				}
+				//Generate p tags
+				function paragraph(data) {
+					article.innerHTML += `<p class="text-justify">${data.text}</p}>`;
+				}
+				//Generate order and unordred list
+				function list(data) {
+					let li = "";
+					for (i in data.items) {
+						li += `<li>${data.items[i]}</li>`;
+					}
+					if (data.style === "unordered") {
+						article.innerHTML += `<ul>${li}</ul>`;
+					} else if (data.style === "ordered") {
+						article.innerHTML += `<ol>${li}</ol>`;
+					}
+				}
+				//Generate img tag
+				function image(data) {
+					article.innerHTML += `<img src="${data.url}" height="380px" width="auto">`;
+					if (data.caption) {
+						article.innerHTML += `</br><small class="text-muted">${data.caption}</small>`;
+					}
+				}
+				//Generate youtube embedded video
+				function embed(data) {
+					if (data.service === "youtube") {
+						article.innerHTML += `<iframe class="mt-4 mb-4"
+									width="${data.width}"
+									height="${data.height}"
+									src=${data.embed}
+									frameborder="0"
+									allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+									allowfullscreen
+									></iframe>`;
+					}
+					if (data.caption) {
+						article.innerHTML += `</br><small class="text-muted">${data.caption}</small>`;
+					}
+				}
+			});
+			//Function for comment generator
+			function updateComment() {
+				const getComments = async () => {
+					const url = `http://localhost:3000/comments/find/${id}`;
+					const response = await fetch(url);
+					const data = await response.json();
+					// console.log(data);
+					return data;
+				};
+
+				getComments().then((data) => {
+					// console.log(data);
+					const comment = document.getElementById("commentblock");
+					let commentHTML = "";
+					for (i in data) {
+						console.log(data[i]);
+						commentHTML += `<div class="my-4 pb-1">
+								<p>${data[i].comment}</p>
+								<small class="text-right">${data[i].createdAt}</small> <br />
+								<a href="/comment.html?id=${data[i].id}">
+									<button class="editcomment btn btn-outline-info" id="" data-id="${data[i].id}">Edit</button>
+								</a>
+								<button class="deletecomment btn btn-outline-danger" id="" data-id="${data[i].id}">Delete</button>
+							</div>`;
+					}
+					comment.innerHTML = commentHTML;
+					// editListner();
+					deleteListner();
+				});
+			}
+			updateComment();
+			//Function for comment deletion
+			function deleteListner() {
+				const delcomm = document.getElementsByClassName("deletecomment");
+				for (let i = 0; i < delcomm.length; i++) {
+					var dc = delcomm[i];
+					dc.addEventListener("click", (e) => {
+						fetch(
+							`http://localhost:3000/comments/delete?id=${e.target.dataset.id}`
+						);
+						// updateComment();
+						e.target.parentElement.remove();
+					});
+				}
+			}
+			//Function for adding new comment
+			document.querySelector("form").addEventListener("submit", (e) => {
+				e.preventDefault();
+				console.log(e.target.comment.value);
+				const comment = e.target.comment.value;
+				const blogid = id;
+				const data = { comment, blogid };
+				// console.log(blog);
+				const put = async () => {
+					const rawResponse = await fetch(
+						"http://localhost:3000/comments/add",
+						{
+							method: "POST",
+							headers: {
+								Accept: "application/json",
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify(data),
+						}
+					);
+				};
+				put();
+				e.target.comment.value = "";
+				setTimeout(() => {
+					updateComment();
+				}, 100);
+			});
+			$("img").on("error", function () {
+				$(this).attr("src", "http://satishprajapati.tech/asserts/bl.jpg");
+			});
+		</script>
+	</body>
+</html>

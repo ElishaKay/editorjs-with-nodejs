@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@editorjs/simple-image@latest"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@editorjs/list@1.4.0"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@editorjs/embed@2.2.1"></script>
+		<script src="https://cdn.jsdelivr.net/g/filesaver.js"></script>
+		<link
+			rel="stylesheet"
+			href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+		/>
+		<link rel="stylesheet" href="../style/style.css" />
+		<title>Create New Blog</title>
+	</head>
+
+	<body>
+		<a href="index.html">
+			<button type="button" class="btn btn-primary btn-md">Back</button>
+		</a>
+		<!-- Blog Section -->
+		<div class="row">
+			<div class="col-10 mx-auto">
+				<div class="text-center">
+					<h1 class="display-4">Create New Blog</h1>
+				</div>
+				<div class="form-group">
+					<label for="titleip">Title:</label>
+					<input
+						type="text"
+						class="form-control"
+						id="titleip"
+						name="titleip"
+						placeholder="Enter your awesome blog title"
+						required
+					/>
+				</div>
+				<label>Write your awesome blog:</label>
+				<div id="editorjs"></div>
+				<small>To add images or youtube videos please enter URL</small>
+				<div class="form-group mt-3">
+					<label for="thumbnailip">Thumbnail Link:</label>
+					<input
+						type="link"
+						class="form-control"
+						id="thumbnailip"
+						name="thumbnailip"
+						placeholder="Enter image link for thumbnail"
+						required
+					/>
+					<small
+						>For testing you can use:
+						http://satishprajapati.tech/asserts/2.jpg</small
+					>
+				</div>
+
+				<button class="btn btn-outline-primary mt-4" id="save-blog">
+					Save Blog
+				</button>
+				<p id="json"></p>
+			</div>
+		</div>
+
+		<script>
+			//Loading Editor.js with all its configuration
+			const editor = new EditorJS({
+				autofocus: true,
+				tools: {
+					header: Header,
+					image: SimpleImage,
+					embed: Embed,
+					list: {
+						class: List,
+						inlineToolbar: true,
+					},
+				},
+			});
+
+			//Saving blog data
+			document.getElementById("save-blog").addEventListener("click", (e) => {
+				e.preventDefault();
+				const title = document.getElementById("titleip").value;
+				const thumbnail = document.getElementById("thumbnailip").value;
+				editor
+					.save()
+					.then((blog) => {
+						document.getElementById("json").innerHTML =
+							"<h3>Blog Created!</h3>";
+						const data = { title, blog, thumbnail };
+
+						//Sending blog to backend server
+						const put = async () => {
+							const rawResponse = await fetch(
+								"http://localhost:3000/blogs/add",
+								{
+									method: "POST",
+									headers: {
+										Accept: "application/json",
+										"Content-Type": "application/json",
+									},
+									body: JSON.stringify(data),
+								}
+							);
+						};
+						put();
+					})
+					.catch((err) => {
+						console.log(err);
+					});
+			});
+		</script>
+	</body>
+</html>

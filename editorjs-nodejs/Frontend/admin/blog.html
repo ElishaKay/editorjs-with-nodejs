@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="../style/style.css" />
+		<link
+			rel="stylesheet"
+			href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+		/>
+		<script
+			src="https://code.jquery.com/jquery-3.4.1.min.js"
+			integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+			crossorigin="anonymous"
+		></script>
+		<title>Blog Page</title>
+	</head>
+	<body>
+		<!--Navbar-->
+		<nav class="navbar navbar-expand-lg navbar-dark bg-dark primary-color">
+			<div class="container">
+				<!-- Navbar brand -->
+				<a class="navbar-brand" href="#">SimpleBlog</a>
+
+				<!-- Collapse button -->
+				<button
+					class="navbar-toggler"
+					type="button"
+					data-toggle="collapse"
+					data-target="#basicExampleNav"
+					aria-controls="basicExampleNav"
+					aria-expanded="false"
+					aria-label="Toggle navigation"
+				>
+					<span class="navbar-toggler-icon"></span>
+				</button>
+
+				<!-- Collapsible content -->
+				<div class="collapse navbar-collapse" id="basicExampleNav">
+					<!-- Links -->
+					<ul class="navbar-nav mr-auto">
+						<li class="nav-item">
+							<a class="nav-link" href="../index.html">Home</a>
+						</li>
+						<li class="nav-item active">
+							<a class="nav-link" href="index.html">Admin</a>
+						</li>
+					</ul>
+					<!-- Links -->
+
+					<form class="form-inline">
+						<div class="md-form my-0">
+							<input
+								class="form-control mr-sm-2"
+								type="text"
+								placeholder="Search"
+								aria-label="Search"
+							/>
+						</div>
+					</form>
+				</div>
+				<!-- Collapsible content -->
+			</div>
+		</nav>
+		<div class="thumbnail" id="thumbnail"></div>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-10 col-sm-12 mx-auto">
+					<article class="mt-5"></article>
+				</div>
+			</div>
+		</div>
+		<hr />
+		<!-- Comment display section -->
+		<h4 class="ml-5">Comments</h4>
+		<div class="col-md-10 col-sm-12 mx-auto" id="commentblock"></div>
+		<!-- Comment display section -->
+		<script src="../javascript/script.js"></script>
+
+		<script>
+			const id = getUrlVars()["id"];
+			//Fetch blog and generate html
+			const getBlog = async () => {
+				// const id = getUrlVars()["id"];
+				const url = `http://localhost:3000/blogs/find/${id}`;
+				const response = await fetch(url);
+				const data = await response.json();
+				console.log(data);
+				return data;
+			};
+			getBlog().then((data) => {
+				let article = document.querySelector("article");
+				const { title, blog, thumbnail } = data;
+				//Thumbnail generation
+				document.getElementById("thumbnail").innerHTML = `
+                <div
+				class="bg"
+				style="background-image: url(${thumbnail})"
+			></div>
+			<h1 class="bottom-left">
+				${title}.
+			</h1>`;
+				//Note: Blog data is stored in form of JSON in DB
+				//Following switch statement is used to generate HTML from JSON response
+				for (i in blog.blocks) {
+					switch (blog.blocks[i].type) {
+						case "header":
+							header(blog.blocks[i].data);
+							break;
+						case "paragraph":
+							paragraph(blog.blocks[i].data);
+							break;
+						case "image":
+							image(blog.blocks[i].data);
+							break;
+						case "list":
+							list(blog.blocks[i].data);
+							break;
+						case "embed":
+							embed(blog.blocks[i].data);
+							break;
+						default:
+							console.log("default");
+							break;
+					}
+				}
+				//Generate H tags
+				function header(data) {
+					article.innerHTML += `<h${data.level}>${data.text}</h${data.level}>`;
+				}
+				//Generate p tags
+				function paragraph(data) {
+					article.innerHTML += `<p class="text-justify">${data.text}</p}>`;
+				}
+				//Generate order and unordred list
+				function list(data) {
+					let li = "";
+					for (i in data.items) {
+						li += `<li>${data.items[i]}</li>`;
+					}
+					if (data.style === "unordered") {
+						article.innerHTML += `<ul>${li}</ul>`;
+					} else if (data.style === "ordered") {
+						article.innerHTML += `<ol>${li}</ol>`;
+					}
+				}
+				//Generate img tag
+				function image(data) {
+					article.innerHTML += `<img src="${data.url}" height="380px" width="auto">`;
+					if (data.caption) {
+						article.innerHTML += `</br><small class="text-muted">${data.caption}</small>`;
+					}
+				}
+				//Generate youtube embedded video
+				function embed(data) {
+					if (data.service === "youtube") {
+						article.innerHTML += `<iframe class="mt-4 mb-4"
+						width="${data.width}"
+						height="${data.height}"
+						src=${data.embed}
+						frameborder="0"
+						allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+						allowfullscreen
+						></iframe>`;
+					}
+					if (data.caption) {
+						article.innerHTML += `</br><small class="text-muted">${data.caption}</small>`;
+					}
+				}
+			});
+			//Function for comment generator
+			function updateComment() {
+				const getComments = async () => {
+					const url = `http://localhost:3000/comments/find/${id}`;
+					const response = await fetch(url);
+					const data = await response.json();
+					// console.log(data);
+					return data;
+				};
+
+				getComments().then((data) => {
+					// console.log(data);
+					const comment = document.getElementById("commentblock");
+					let commentHTML = "";
+					for (i in data) {
+						console.log(data[i]);
+						commentHTML += `<div class="my-4 pb-1">
+								<p>${data[i].comment}</p>
+								<small class="text-right">${data[i].createdAt}</small> <br />
+								<button class="deletecomment btn btn-outline-danger" id="" data-id="${data[i].id}">Delete</button>
+							</div>`;
+					}
+					comment.innerHTML = commentHTML;
+					// editListner();
+					deleteListner();
+				});
+			}
+			updateComment();
+			//Function for comment deletion
+			function deleteListner() {
+				const delcomm = document.getElementsByClassName("deletecomment");
+				for (let i = 0; i < delcomm.length; i++) {
+					var dc = delcomm[i];
+					dc.addEventListener("click", (e) => {
+						fetch(
+							`http://localhost:3000/comments/delete?id=${e.target.dataset.id}`
+						);
+						// updateComment();
+						e.target.parentElement.remove();
+					});
+				}
+			}
+			$("img").on("error", function () {
+				$(this).attr("src", "http://satishprajapati.tech/asserts/bl.jpg");
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<title>A Simple Blog</title>
+		<link
+			rel="stylesheet"
+			href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+		/>
+		<link rel="stylesheet" href="style/style.css" />
+		<script
+			src="https://code.jquery.com/jquery-3.4.1.slim.js"
+			integrity="sha256-BTlTdQO9/fascB1drekrDVkaKd9PkwBymMlHOiG+qLI="
+			crossorigin="anonymous"
+		></script>
+	</head>
+
+	<body>
+		<!--Navbar-->
+		<!--Navbar-->
+		<nav class="navbar navbar-expand-lg navbar-dark bg-dark primary-color">
+			<div class="container">
+				<!-- Navbar brand -->
+				<a class="navbar-brand" href="#">SimpleBlog</a>
+
+				<!-- Collapse button -->
+				<button
+					class="navbar-toggler"
+					type="button"
+					data-toggle="collapse"
+					data-target="#basicExampleNav"
+					aria-controls="basicExampleNav"
+					aria-expanded="false"
+					aria-label="Toggle navigation"
+				>
+					<span class="navbar-toggler-icon"></span>
+				</button>
+
+				<!-- Collapsible content -->
+				<div class="collapse navbar-collapse" id="basicExampleNav">
+					<!-- Links -->
+					<ul class="navbar-nav mr-auto">
+						<li class="nav-item active">
+							<a class="nav-link" href="index.html">Home</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="admin/index.html">Admin</a>
+						</li>
+					</ul>
+					<!-- Links -->
+
+					<form class="form-inline">
+						<div class="md-form my-0">
+							<input
+								class="form-control mr-sm-2"
+								type="text"
+								placeholder="Search"
+								aria-label="Search"
+							/>
+						</div>
+					</form>
+				</div>
+				<!-- Collapsible content -->
+			</div>
+		</nav>
+		<!--/.Navbar-->
+		<div class="container py-5">
+			<header class="text-center">
+				<h1 class="display-4 font-weight-bold">A Simple Blog</h1>
+				<p class="font-italic text-muted mb-0">
+					Created with Node.js, JavaScript, PostgreSQL, Sqlizer, Bootstrap 4,
+					Express.js & Editor.js
+				</p>
+			</header>
+
+			<div class="py-5">
+				<h4 class="font-weight-bold mb-4">Recent Blogs</h4>
+				<div class="row mb-4" id="blogdiv"></div>
+			</div>
+		</div>
+		<script>
+			//Fetch all blog and generate blog card
+			const getBlogs = async () => {
+				const response = await fetch("http://localhost:3000/blogs");
+				const data = await response.json();
+				return data;
+			};
+
+			getBlogs()
+				.then((data) => {
+					for (i in data) {
+						document.getElementById(
+							"blogdiv"
+						).innerHTML += `<div class="col-lg-6 mb-4">
+						<a href="blog.html?id=${data[i].id}">
+							<div class="hover hover-1 text-white rounded">
+								<img src="${data[i].thumbnail}" alt=""/>
+								<div class="hover-overlay"></div>
+								<div class="hover-1-content px-5 py-4">
+									<h3 class="hover-1-title text-uppercase font-weight-bold mb-0">
+										${data[i].title}
+									</h3>
+								</div>
+							</div>
+						</a>
+					</div>`;
+					}
+				})
+				.catch((err) => {});
+
+			$("img").on("error", function () {
+				$(this).attr("src", "http://satishprajapati.tech/asserts/bl.jpg");
+			});
+		</script>
+	</body>
+</html>
